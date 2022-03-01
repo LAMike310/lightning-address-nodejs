@@ -6,6 +6,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import bip32 from 'bip32';
 import bip39 from 'bip39';
+
 let hexArray = [
   '0',
   '1',
@@ -72,7 +73,7 @@ router.get('/lnurlp/:username', async (req, res) => {
           console.log(mnemonic);
           return res.status(200).json({
             status: 'OK',
-            successAction: { tag: 'halo', address: preimage },
+            successAction: { tag: 'halo', address: mnemonic },
             routes: [],
             pr: invoice.payment_request,
             disposable: false

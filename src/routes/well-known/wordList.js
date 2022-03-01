@@ -2046,5 +2046,5 @@ exports.wordList = [
   'zebra',
   'zero',
   'zone',
-  'zoo,'
+  'zoo'
 ];

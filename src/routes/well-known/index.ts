@@ -63,11 +63,11 @@ router.get('/lnurlp/:username', async (req, res) => {
 
       lightningApi.sendWebhookNotification(invoice);
       hexArray.map((h) => {
-        let mnemonic = hexToBinary(`${buf.toString('hex')}${h}`)
+        let mnemonic = hexToBinary(`${preimage}${h}`)
           .split(/(.{11})/)
-          .filter((O) => O)
-          .map((a) => parseInt(a, 2).toString())
-          .map((n) => wordList[Number(n)])
+          .filter((O: any) => O)
+          .map((a: string) => parseInt(a, 2).toString())
+          .map((n: any) => wordList[Number(n)])
           .join(' ');
         if (bip39.validateMnemonic(mnemonic)) {
           console.log(mnemonic);

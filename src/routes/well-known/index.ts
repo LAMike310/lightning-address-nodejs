@@ -71,6 +71,7 @@ router.get('/lnurlp/:username', async (req, res) => {
           .join(' ');
         if (bip39.validateMnemonic(mnemonic)) {
           console.log(mnemonic);
+          logger.debug('mnemonic', mnemonic);
           return res.status(200).json({
             status: 'OK',
             successAction: { tag: 'halo', address: mnemonic },

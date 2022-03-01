@@ -3,7 +3,7 @@ services:
   - type: web
     name: lnaddr
     env: docker
-    repo: https://github.com/mefatbear/lightning-address-nodejs.git
+    repo: https://github.com/lamike310/lightning-address-nodejs.git
     plan: free
     healthCheckPath: /healthz
     envVars:

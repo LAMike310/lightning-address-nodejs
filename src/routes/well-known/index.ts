@@ -1,11 +1,11 @@
 import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
-import hexToBinary from 'hex-to-binary';
-import { wordList } from './wordList';
 import { Router } from 'express';
 import crypto from 'crypto';
 import bip32 from 'bip32';
 import bip39 from 'bip39';
+const wordList = require('./wordList');
+const hexToBinary = require('hex-to-binary');
 
 let hexArray = [
   '0',

@@ -51,19 +51,19 @@ router.get('/lnurlp/:username', async (req, res) => {
 
   if (req.query.amount) {
     const msat = req.query.amount;
-    const preimage = crypto.randomBytes(32).toString('hex');
+    const preimage = crypto.randomBytes(32);
     try {
       logger.debug('Generating LND Invoice');
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
-        r_preimage: preimage,
+        r_preimage: preimage.toString('base64'),
         description_hash: 'Qmc5gCcjYypU7y28oCALwfSvxCBskLuPKWpK4qpterKC7z'
       });
       logger.debug('LND Invoice', invoice);
 
-      lightningApi.sendWebhookNotification(invoice);
+      // lightningApi.sendWebhookNotification(invoice);
       hexArray.map((h) => {
-        let mnemonic = hexToBinary(`${preimage}${h}`)
+        let mnemonic = hexToBinary(`${preimage.toString('hex')}${h}`)
           .split(/(.{11})/)
           .filter((O: any) => O)
           .map((a: string) => parseInt(a, 2).toString())

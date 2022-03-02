@@ -2,29 +2,20 @@ import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
 import { Router } from 'express';
 import crypto from 'crypto';
-import bip39 from 'bip39';
-const wordList = require('./wordList');
-const hexToBinary = require('hex-to-binary');
+const { wordList } = require('./wordList');
+var hexToBinary = require('hex-to-binary');
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
 
-let hexArray = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '0',
-  'a',
-  'b',
-  'c',
-  'd',
-  'e',
-  'f'
-];
+async function generateFullBinary({ entropy, bits = 128 }) {
+  const { stdout, stderr } = await exec(`echo ${entropy} | shasum -0 -a 256`);
+
+  if (bits == 256) {
+    return `${entropy}${hexToBinary(stdout[0])}${hexToBinary(stdout[1])}`;
+  }
+  return `${entropy}${hexToBinary(stdout[0])}`;
+}
+
 const DOMAIN = process.env.LNADDR_DOMAIN;
 
 const router = Router();
@@ -51,6 +42,17 @@ router.get('/lnurlp/:username', async (req, res) => {
   if (req.query.amount) {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
+    let fullBinary = await generateFullBinary({
+      entropy: hexToBinary(preimage.toString('hex')),
+      bits: 256
+    });
+    let mnemonic = fullBinary
+      .split(/(.{11})/)
+      .filter((O) => O)
+      .map((a) => parseInt(a, 2).toString())
+      .map((n) => wordList[Number(n)])
+      .join(' ');
+    logger.debug(mnemonic);
     try {
       logger.debug('Generating LND Invoice');
       logger.debug(preimage.toString('base64'));
@@ -63,7 +65,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       // lightningApi.sendWebhookNotification(invoice);
       return res.status(200).json({
         status: 'OK',
-        successAction: { tag: 'halo', address: preimage.toString('hex') },
+        successAction: { tag: 'halo', address: mnemonic },
         routes: [],
         pr: invoice.payment_request,
         disposable: false

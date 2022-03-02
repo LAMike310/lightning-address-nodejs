@@ -38,6 +38,7 @@
     "bip32": "^3.0.1",
     "bip39": "^3.0.4",
     "bitcoinjs-lib": "^6.0.1",
+    "crypto": "^1.0.1",
     "express": "^4.17.1",
     "express-handlebars": "^6.0.2",
     "helmet": "^4.6.0",

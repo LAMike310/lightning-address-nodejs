@@ -1,56 +1,41 @@
 import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
 import { Router } from 'express';
-import crypto from 'crypto';
+const bitcoin = require('bitcoinjs-lib');
+const uniq = require('uniq');
+const crypto = require('crypto');
 const { wordList } = require('./wordList');
 var hexToBinary = require('hex-to-binary');
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
 const bip32 = require('bip32');
 const bip39 = require('bip39');
 
-let hexArray = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '0',
-  'a',
-  'b',
-  'c',
-  'd',
-  'e',
-  'f'
-];
+let hexArray = '0123456789abcdef'.split('');
+let hexIndex = 0;
+let allPossibleEndings = [];
 
-async function generateFullMnemonic({ entropy = '0' }) {
-  const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
-  let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
-  hexArray.map((h) => {
-    let mnemonic = `${allButFourBits}${hexToBinary(h)}`
-      .split(/(.{11})/)
-      .filter((O) => O)
-      .map((a) => parseInt(a, 2).toString())
-      .map((n) => wordList[Number(n)])
-      .join(' ');
-    logger.debug(mnemonic);
-    if (bip39.validateMnemonic(mnemonic)) {
-      return `${allButFourBits}${hexToBinary(h)}`;
-    }
-  });
-  // let mnemonic = `${entropy}${hexToBinary(stdout[0])}`
-  //   .split(/(.{11})/)
-  //   .filter((O) => O)
-  //   .map((a) => parseInt(a, 2).toString())
-  //   .map((n) => wordList[Number(n)])
-  //   .join(' ');
-  // return mnemonic;
+const findLastBits = (hash) => {
+  if (hexIndex <= 16) {
+    hexArray.map((h) => {
+      allPossibleEndings.push(`${hexArray[hexIndex]}${h}`);
+    });
+    hexIndex++;
+    findLastBits(hash);
+  }
+  return uniq(allPossibleEndings).map((e) => `${hexToBinary(hash)}${hexToBinary(e)}`);
+};
+
+const splitBits = (a) =>
+  a
+    .split(/(.{11})/)
+    .filter((O) => O)
+    .map((a) => parseInt(a, 2).toString())
+    .map((n) => wordList[Number(n)])
+    .join(' ');
+
+function getAddress(node) {
+  const config = { pubkey: node.publicKey };
+  const { address } = bitcoin.payments.p2wpkh(config);
+  return address;
 }
 
 const DOMAIN = process.env.LNADDR_DOMAIN;
@@ -79,11 +64,14 @@ router.get('/lnurlp/:username', async (req, res) => {
   if (req.query.amount) {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
-    let mnemonic = await generateFullMnemonic({
-      entropy: hexToBinary(preimage.toString('hex'))
-    });
-
-    logger.debug(mnemonic);
+    let binarySeedArray = findLastBits(preimage).map((a) => bip39.validateMnemonic(splitBits(a)));
+    let getSeed = (preimage) => splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
+    let haloAddress = getAddress(
+      bip32
+        .fromSeed(bip39.mnemonicToSeedSync(getSeed(preimage.toString('hex'))))
+        .derivePath(`m/84'/0'/0'/0/0`)
+    );
+    logger.debug('haloAddress', haloAddress);
     try {
       logger.debug('Generating LND Invoice');
       const invoice = await lightningApi.lightningAddInvoice({
@@ -95,7 +83,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       // lightningApi.sendWebhookNotification(invoice);
       return res.status(200).json({
         status: 'OK',
-        successAction: { tag: 'halo', address: mnemonic },
+        successAction: { tag: 'halo', address: haloAddress },
         routes: [],
         pr: invoice.payment_request,
         disposable: false

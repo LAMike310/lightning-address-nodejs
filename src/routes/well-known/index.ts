@@ -9,36 +9,6 @@ var hexToBinary = require('hex-to-binary');
 const bip32 = require('bip32');
 const bip39 = require('bip39');
 
-let hexArray = '0123456789abcdef'.split('');
-let hexIndex = 0;
-let allPossibleEndings: string[];
-
-const findLastBits = (hash: string) => {
-  if (hexIndex <= 16) {
-    hexArray.map((h) => {
-      logger.debug(`${hexArray[hexIndex]}${h}`);
-      allPossibleEndings.push(`${hexArray[hexIndex]}${h}`);
-    });
-    hexIndex++;
-    findLastBits(hash);
-  }
-  return uniq(allPossibleEndings).map((e: string) => `${hexToBinary(hash)}${hexToBinary(e)}`);
-};
-
-const splitBits = (a: string) =>
-  a
-    .split(/(.{11})/)
-    .filter((O: string) => O)
-    .map((a: string) => parseInt(a, 2).toString())
-    .map((n: string) => wordList[Number(n)])
-    .join(' ');
-
-function getAddress(node: { publicKey: any }) {
-  const config = { pubkey: node.publicKey };
-  const { address } = bitcoin.payments.p2wpkh(config);
-  return address;
-}
-
 const DOMAIN = process.env.LNADDR_DOMAIN;
 
 const router = Router();
@@ -65,6 +35,35 @@ router.get('/lnurlp/:username', async (req, res) => {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
     const preimageHex = preimage.toString('hex');
+
+    let hexArray = '0123456789abcdef'.split('');
+    let hexIndex = 0;
+    var allPossibleEndings: string[] = [];
+
+    const findLastBits = (hash: string) => {
+      if (hexIndex <= 16) {
+        hexArray.map((h) => {
+          allPossibleEndings.push(`${hexArray[hexIndex]}${h}`);
+        });
+        hexIndex++;
+        findLastBits(hash);
+      }
+      return uniq(allPossibleEndings).map((e: string) => `${hexToBinary(hash)}${hexToBinary(e)}`);
+    };
+
+    const splitBits = (a: string) =>
+      a
+        .split(/(.{11})/)
+        .filter((O: string) => O)
+        .map((a: string) => parseInt(a, 2).toString())
+        .map((n: string) => wordList[Number(n)])
+        .join(' ');
+    function getAddress(node: { publicKey: any }) {
+      const config = { pubkey: node.publicKey };
+      const { address } = bitcoin.payments.p2wpkh(config);
+      return address;
+    }
+
     let binarySeedArray = findLastBits(preimageHex).map((a: string) =>
       bip39.validateMnemonic(splitBits(a))
     );

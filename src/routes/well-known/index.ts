@@ -2,7 +2,6 @@ import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
 import { Router } from 'express';
 import crypto from 'crypto';
-import bip32 from 'bip32';
 import bip39 from 'bip39';
 const wordList = require('./wordList');
 const hexToBinary = require('hex-to-binary');
@@ -60,26 +59,14 @@ router.get('/lnurlp/:username', async (req, res) => {
         r_preimage: preimage.toString('base64')
       });
       logger.debug('LND Invoice', invoice);
-
+      logger.debug(preimage.toString('hex'));
       // lightningApi.sendWebhookNotification(invoice);
-      hexArray.map((h) => {
-        let mnemonic = hexToBinary(`${preimage.toString('hex')}${h}`)
-          .split(/(.{11})/)
-          .filter((O: any) => O)
-          .map((a: string) => parseInt(a, 2).toString())
-          .map((n: any) => wordList[Number(n)])
-          .join(' ');
-        if (bip39.validateMnemonic(mnemonic)) {
-          console.log(mnemonic);
-          logger.debug('mnemonic', mnemonic);
-          return res.status(200).json({
-            status: 'OK',
-            successAction: { tag: 'halo', address: mnemonic },
-            routes: [],
-            pr: invoice.payment_request,
-            disposable: false
-          });
-        }
+      return res.status(200).json({
+        status: 'OK',
+        successAction: { tag: 'halo', address: preimage.toString('hex') },
+        routes: [],
+        pr: invoice.payment_request,
+        disposable: false
       });
     } catch (error) {
       logger.error('Error creating Invoice', error);

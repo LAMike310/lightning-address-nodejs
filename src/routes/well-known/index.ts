@@ -57,8 +57,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       logger.debug(preimage.toString('base64'));
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
-        r_preimage: preimage.toString('base64'),
-        description_hash: 'Qmc5gCcjYypU7y28oCALwfSvxCBskLuPKWpK4qpterKC7z'
+        r_preimage: preimage.toString('base64')
       });
       logger.debug('LND Invoice', invoice);
 

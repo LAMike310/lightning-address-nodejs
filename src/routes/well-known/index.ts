@@ -11,9 +11,9 @@ const bip39 = require('bip39');
 
 let hexArray = '0123456789abcdef'.split('');
 let hexIndex = 0;
-let allPossibleEndings = [];
+let allPossibleEndings: string[];
 
-const findLastBits = (hash) => {
+const findLastBits = (hash: string) => {
   if (hexIndex <= 16) {
     hexArray.map((h) => {
       allPossibleEndings.push(`${hexArray[hexIndex]}${h}`);
@@ -21,18 +21,18 @@ const findLastBits = (hash) => {
     hexIndex++;
     findLastBits(hash);
   }
-  return uniq(allPossibleEndings).map((e) => `${hexToBinary(hash)}${hexToBinary(e)}`);
+  return uniq(allPossibleEndings).map((e: string) => `${hexToBinary(hash)}${hexToBinary(e)}`);
 };
 
-const splitBits = (a) =>
+const splitBits = (a: string) =>
   a
     .split(/(.{11})/)
-    .filter((O) => O)
-    .map((a) => parseInt(a, 2).toString())
-    .map((n) => wordList[Number(n)])
+    .filter((O: string) => O)
+    .map((a: string) => parseInt(a, 2).toString())
+    .map((n: string) => wordList[Number(n)])
     .join(' ');
 
-function getAddress(node) {
+function getAddress(node: { publicKey: any }) {
   const config = { pubkey: node.publicKey };
   const { address } = bitcoin.payments.p2wpkh(config);
   return address;
@@ -60,18 +60,17 @@ router.get('/lnurlp/:username', async (req, res) => {
     ['text/identifier', identifier],
     ['text/plain', `Sats for ${username}!`]
   ];
-
   if (req.query.amount) {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
-    let binarySeedArray = findLastBits(preimage.toString('hex')).map((a) =>
+    const preimageHex = preimage.toString('hex');
+    let binarySeedArray = findLastBits(preimageHex).map((a: string) =>
       bip39.validateMnemonic(splitBits(a))
     );
-    let getSeed = (preimage) => splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
+    let getSeed = (preimage: string) =>
+      splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
     let haloAddress = getAddress(
-      bip32
-        .fromSeed(bip39.mnemonicToSeedSync(getSeed(preimage.toString('hex'))))
-        .derivePath(`m/84'/0'/0'/0/0`)
+      bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
     logger.debug('haloAddress', haloAddress);
     try {
@@ -81,7 +80,7 @@ router.get('/lnurlp/:username', async (req, res) => {
         r_preimage: preimage.toString('base64')
       });
       // logger.debug('LND Invoice', invoice);
-      // logger.debug(preimage.toString('hex'));
+      // logger.debug(preimageHex);
       // lightningApi.sendWebhookNotification(invoice);
       return res.status(200).json({
         status: 'OK',

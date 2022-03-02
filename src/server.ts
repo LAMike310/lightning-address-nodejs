@@ -3,7 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import { wellknown } from './routes/well-known';
+import { wellknown } from './routes/well-known/index.js';
 import { health } from './routes/health';
 import logger from './shared/logger';
 

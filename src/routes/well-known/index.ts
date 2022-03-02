@@ -29,8 +29,8 @@ let hexArray = [
   'f'
 ];
 
-async function generateFullBinary({ entropy = '0', bits = 128 }) {
-  const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum | cut -c 1-${bits}`);
+async function generateFullMnemonic({ entropy = '0', bits = 128 }) {
+  const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
   if (bits == 256) {
     let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
     hexArray.map((h) => {
@@ -47,7 +47,13 @@ async function generateFullBinary({ entropy = '0', bits = 128 }) {
       }
     });
   }
-  return `${entropy}${hexToBinary(stdout[0])}`;
+  let mnemonic = `${entropy}${hexToBinary(stdout[0])}`
+    .split(/(.{11})/)
+    .filter((O) => O)
+    .map((a) => parseInt(a, 2).toString())
+    .map((n) => wordList[Number(n)])
+    .join(' ');
+  return mnemonic;
 }
 
 const DOMAIN = process.env.LNADDR_DOMAIN;
@@ -76,16 +82,11 @@ router.get('/lnurlp/:username', async (req, res) => {
   if (req.query.amount) {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
-    let fullBinary = await generateFullBinary({
+    let mnemonic = await generateFullMnemonic({
       entropy: hexToBinary(preimage.toString('hex')),
       bits: 256
     });
-    let mnemonic = fullBinary
-      .split(/(.{11})/)
-      .filter((O) => O)
-      .map((a) => parseInt(a, 2).toString())
-      .map((n) => wordList[Number(n)])
-      .join(' ');
+
     logger.debug(mnemonic);
     try {
       logger.debug('Generating LND Invoice');

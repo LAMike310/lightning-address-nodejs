@@ -64,7 +64,9 @@ router.get('/lnurlp/:username', async (req, res) => {
   if (req.query.amount) {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
-    let binarySeedArray = findLastBits(preimage).map((a) => bip39.validateMnemonic(splitBits(a)));
+    let binarySeedArray = findLastBits(preimage.toString('hex')).map((a) =>
+      bip39.validateMnemonic(splitBits(a))
+    );
     let getSeed = (preimage) => splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
     let haloAddress = getAddress(
       bip32

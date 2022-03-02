@@ -29,24 +29,21 @@ let hexArray = [
   'f'
 ];
 
-async function generateFullMnemonic({ entropy = '0', bits = 128 }) {
+async function generateFullMnemonic({ entropy = '0' }) {
   const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
-  if (bits == 256) {
-    logger.debug('256 bit entropy');
-    let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
-    hexArray.map((h) => {
-      let mnemonic = `${allButFourBits}${hexToBinary(h)}`
-        .split(/(.{11})/)
-        .filter((O) => O)
-        .map((a) => parseInt(a, 2).toString())
-        .map((n) => wordList[Number(n)])
-        .join(' ');
-      logger.debug(mnemonic);
-      if (bip39.validateMnemonic(mnemonic)) {
-        return `${allButFourBits}${hexToBinary(h)}`;
-      }
-    });
-  }
+  let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
+  hexArray.map((h) => {
+    let mnemonic = `${allButFourBits}${hexToBinary(h)}`
+      .split(/(.{11})/)
+      .filter((O) => O)
+      .map((a) => parseInt(a, 2).toString())
+      .map((n) => wordList[Number(n)])
+      .join(' ');
+    logger.debug(mnemonic);
+    if (bip39.validateMnemonic(mnemonic)) {
+      return `${allButFourBits}${hexToBinary(h)}`;
+    }
+  });
   // let mnemonic = `${entropy}${hexToBinary(stdout[0])}`
   //   .split(/(.{11})/)
   //   .filter((O) => O)
@@ -83,20 +80,18 @@ router.get('/lnurlp/:username', async (req, res) => {
     const msat = req.query.amount;
     const preimage = crypto.randomBytes(32);
     let mnemonic = await generateFullMnemonic({
-      entropy: hexToBinary(preimage.toString('hex')),
-      bits: 256
+      entropy: hexToBinary(preimage.toString('hex'))
     });
 
     logger.debug(mnemonic);
     try {
       logger.debug('Generating LND Invoice');
-      logger.debug(preimage.toString('base64'));
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64')
       });
-      logger.debug('LND Invoice', invoice);
-      logger.debug(preimage.toString('hex'));
+      // logger.debug('LND Invoice', invoice);
+      // logger.debug(preimage.toString('hex'));
       // lightningApi.sendWebhookNotification(invoice);
       return res.status(200).json({
         status: 'OK',

@@ -9,7 +9,7 @@ const exec = util.promisify(require('child_process').exec);
 
 async function generateFullBinary({ entropy = '0', bits = 128 }) {
   const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
-
+  logger.debug(stdout);
   if (bits == 256) {
     return `${entropy}${hexToBinary(stdout[0])}${hexToBinary(stdout[1])}`;
   }

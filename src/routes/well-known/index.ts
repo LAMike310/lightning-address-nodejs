@@ -7,7 +7,7 @@ var hexToBinary = require('hex-to-binary');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
-async function generateFullBinary({ entropy, bits = 128 }) {
+async function generateFullBinary({ entropy = '0', bits = 128 }) {
   const { stdout, stderr } = await exec(`echo ${entropy} | shasum -0 -a 256`);
 
   if (bits == 256) {

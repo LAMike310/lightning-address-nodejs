@@ -6,12 +6,46 @@ const { wordList } = require('./wordList');
 var hexToBinary = require('hex-to-binary');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
+const bip32 = require('bip32');
+const bip39 = require('bip39');
+
+let hexArray = [
+  '0',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '0',
+  'a',
+  'b',
+  'c',
+  'd',
+  'e',
+  'f'
+];
 
 async function generateFullBinary({ entropy = '0', bits = 128 }) {
-  const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
-  logger.debug(stdout);
+  const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum | cut -c 1-${bits}`);
   if (bits == 256) {
-    return `${entropy}${hexToBinary(stdout[0])}${hexToBinary(stdout[1])}`;
+    let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
+    hexArray.map((h) => {
+      let mnemonic = `${allButFourBits}${hexToBinary(h)}`
+        .split(/(.{11})/)
+        .filter((O) => O)
+        .map((a) => parseInt(a, 2).toString())
+        .map((n) => wordList[Number(n)])
+        .join(' ');
+      if (bip39.validateMnemonic(mnemonic)) {
+        console.log(mnemonic);
+        logger.debug('FOUND THE LAST BIT');
+        return `${allButFourBits}${hexToBinary(h)}`;
+      }
+    });
   }
   return `${entropy}${hexToBinary(stdout[0])}`;
 }

@@ -16,6 +16,7 @@ let allPossibleEndings: string[];
 const findLastBits = (hash: string) => {
   if (hexIndex <= 16) {
     hexArray.map((h) => {
+      logger.debug(`${hexArray[hexIndex]}${h}`);
       allPossibleEndings.push(`${hexArray[hexIndex]}${h}`);
     });
     hexIndex++;

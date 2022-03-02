@@ -32,6 +32,7 @@ let hexArray = [
 async function generateFullMnemonic({ entropy = '0', bits = 128 }) {
   const { stdout, stderr } = await exec(`echo ${entropy} | sha256sum`);
   if (bits == 256) {
+    logger.debug('256 bit entropy');
     let allButFourBits = `${entropy}${hexToBinary(stdout[0])}`;
     hexArray.map((h) => {
       let mnemonic = `${allButFourBits}${hexToBinary(h)}`
@@ -40,20 +41,19 @@ async function generateFullMnemonic({ entropy = '0', bits = 128 }) {
         .map((a) => parseInt(a, 2).toString())
         .map((n) => wordList[Number(n)])
         .join(' ');
+      logger.debug(mnemonic);
       if (bip39.validateMnemonic(mnemonic)) {
-        console.log(mnemonic);
-        logger.debug('FOUND THE LAST BIT');
         return `${allButFourBits}${hexToBinary(h)}`;
       }
     });
   }
-  let mnemonic = `${entropy}${hexToBinary(stdout[0])}`
-    .split(/(.{11})/)
-    .filter((O) => O)
-    .map((a) => parseInt(a, 2).toString())
-    .map((n) => wordList[Number(n)])
-    .join(' ');
-  return mnemonic;
+  // let mnemonic = `${entropy}${hexToBinary(stdout[0])}`
+  //   .split(/(.{11})/)
+  //   .filter((O) => O)
+  //   .map((a) => parseInt(a, 2).toString())
+  //   .map((n) => wordList[Number(n)])
+  //   .join(' ');
+  // return mnemonic;
 }
 
 const DOMAIN = process.env.LNADDR_DOMAIN;

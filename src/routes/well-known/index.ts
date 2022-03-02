@@ -6,7 +6,9 @@ const uniq = require('uniq');
 const crypto = require('crypto');
 const { wordList } = require('./wordList');
 var hexToBinary = require('hex-to-binary');
-const bip32 = require('bip32');
+const ecc = require('tiny-secp256k1');
+const { BIP32Factory } = require('bip32');
+const bip32 = BIP32Factory(ecc);
 const bip39 = require('bip39');
 
 const DOMAIN = process.env.LNADDR_DOMAIN;
@@ -72,6 +74,7 @@ router.get('/lnurlp/:username', async (req, res) => {
     let haloAddress = getAddress(
       bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
+
     logger.debug('haloAddress', haloAddress);
     try {
       logger.debug('Generating LND Invoice');

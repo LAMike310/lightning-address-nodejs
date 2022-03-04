@@ -1,5 +1,6 @@
 import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
+import { address } from 'bitcoinjs-lib';
 import { Router } from 'express';
 const bitcoin = require('bitcoinjs-lib');
 const uniq = require('uniq');
@@ -103,7 +104,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       console.log(multiSig);
       return res.status(200).json({
         status: 'OK',
-        successAction: { tag: 'halo', address: haloAddress },
+        successAction: { tag: 'halo', address: multiSig },
         routes: [],
         pr: invoice.payment_request,
         disposable: false

@@ -80,7 +80,7 @@ router.get('/lnurlp/:username', async (req, res) => {
 
     logger.debug('haloAddress', haloAddress);
     try {
-      logger.debug('Generating LND Invoice');
+      // logger.debug('Generating LND Invoice');
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64')
@@ -102,6 +102,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
 
       console.log(multiSig);
+      logger.debug('preimageHex', preimageHex);
       return res.status(200).json({
         status: 'OK',
         successAction: { tag: 'halo', address: multiSig },

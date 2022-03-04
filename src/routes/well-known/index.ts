@@ -100,9 +100,8 @@ router.get('/lnurlp/:username', async (req, res) => {
         timestamp - moment.utc('2008-10-31 18:10:00 UTC', '"YYYY-MM-DD HH:MM:SS"').unix();
       const { publicKey } = getSatoshiTimeData(satoshiIndex);
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
-
       console.log(multiSig);
-      logger.debug('preimageHex', preimageHex);
+      logger.debug(preimageHex);
       return res.status(200).json({
         status: 'OK',
         successAction: { tag: 'halo', address: multiSig },

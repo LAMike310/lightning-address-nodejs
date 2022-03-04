@@ -10,6 +10,9 @@ const ecc = require('tiny-secp256k1');
 const { BIP32Factory } = require('bip32');
 const bip32 = BIP32Factory(ecc);
 const bip39 = require('bip39');
+const lightningPayReq = require('bolt11');
+const moment = require('moment');
+const { getSatoshiTimeData } = require('./satoshiTime');
 
 const DOMAIN = process.env.LNADDR_DOMAIN;
 
@@ -63,7 +66,7 @@ router.get('/lnurlp/:username', async (req, res) => {
     function getAddress(node: { publicKey: any }) {
       const config = { pubkey: node.publicKey };
       const { address } = bitcoin.payments.p2wpkh(config);
-      return address;
+      return { haloAddress: address, haloKey: node.publicKey.toString('hex') };
     }
 
     let binarySeedArray = findLastBits(preimageHex).map((a: string) =>
@@ -71,7 +74,7 @@ router.get('/lnurlp/:username', async (req, res) => {
     );
     let getSeed = (preimage: string) =>
       splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
-    let haloAddress = getAddress(
+    let { haloAddress, haloKey } = getAddress(
       bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
 
@@ -85,6 +88,20 @@ router.get('/lnurlp/:username', async (req, res) => {
       // logger.debug('LND Invoice', invoice);
       // logger.debug(preimageHex);
       // lightningApi.sendWebhookNotification(invoice);
+      const createMultiSig = (pubkeys: any[]) => {
+        const { address } = bitcoin.payments.p2sh({
+          redeem: bitcoin.payments.p2ms({ m: 2, pubkeys })
+        });
+        return address;
+      };
+
+      let { timestamp } = lightningPayReq.decode(invoice.payment_request);
+      let satoshiIndex =
+        timestamp - moment.utc('2008-10-31 18:10:00 UTC', '"YYYY-MM-DD HH:MM:SS"').unix();
+      const { publicKey } = getSatoshiTimeData(satoshiIndex);
+      const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
+
+      console.log(multiSig);
       return res.status(200).json({
         status: 'OK',
         successAction: { tag: 'halo', address: haloAddress },

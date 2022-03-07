@@ -42,6 +42,7 @@
     "crypto": "^1.0.1",
     "express": "^4.17.1",
     "express-handlebars": "^6.0.2",
+    "hash.js": "^1.1.7",
     "helmet": "^4.6.0",
     "hex-to-binary": "^1.0.1",
     "moment": "^2.29.1",

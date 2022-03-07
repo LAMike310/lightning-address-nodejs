@@ -2,6 +2,7 @@ import { lightningApi } from '../../shared/lnd/api';
 import logger from '../../shared/logger';
 import { address } from 'bitcoinjs-lib';
 import { Router } from 'express';
+import hash from 'hash.js';
 const bitcoin = require('bitcoinjs-lib');
 const uniq = require('uniq');
 const crypto = require('crypto');
@@ -83,7 +84,8 @@ router.get('/lnurlp/:username', async (req, res) => {
       // logger.debug('Generating LND Invoice');
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
-        r_preimage: preimage.toString('base64')
+        r_preimage: preimage.toString('base64'),
+        description_hash: hash.sha256().update(username).digest('hex')
       });
       // logger.debug('LND Invoice', invoice);
       // logger.debug(preimageHex);

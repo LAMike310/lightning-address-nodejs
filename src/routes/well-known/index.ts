@@ -106,7 +106,7 @@ router.get('/lnurlp/:username', async (req, res) => {
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),
         memo: multiSig,
-        creation_date: Buffer.from(moment().unix().toString()).toString('base64'),
+        creation_date: Buffer.from(currentTime.toString()).toString('base64'),
         description_hash: createHash('sha256').update(username).digest('base64')
       });
       let { timestamp } = lightningPayReq.decode(invoice.payment_request);

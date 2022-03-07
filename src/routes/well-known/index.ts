@@ -83,7 +83,8 @@ router.get('/lnurlp/:username', async (req, res) => {
     try {
       // logger.debug('Generating LND Invoice');
       let descriptionHex = hash.sha256().update(username).digest('hex');
-      logger.debug(descriptionHex);
+      logger.debug(`${username}, ${username.length}`);
+      logger.info(`HASHED USERNAME: ${descriptionHex}`);
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),

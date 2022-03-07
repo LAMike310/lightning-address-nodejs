@@ -94,7 +94,7 @@ router.get('/lnurlp/:username', async (req, res) => {
         r_preimage: preimage.toString('base64'),
         memo: `{haloAddress: ${haloAddress}, CID: ${createHash('sha256')
           .update(username)
-          .digest('base64')}}`
+          .digest('hex')}}`
         // description_hash: createHash('sha256').update(username).digest('base64')
       });
       // logger.debug('LND Invoice', invoice);

@@ -81,7 +81,6 @@ router.get('/lnurlp/:username', async (req, res) => {
 
     logger.debug(`haloAddress ${haloAddress}`);
     try {
-      logger.debug(`${username}, ${username.length}`);
       logger.info(
         `HASHED USERNAME: ${createHash('sha256').update(username).digest('hex')} ${createHash(
           'sha256'
@@ -106,16 +105,18 @@ router.get('/lnurlp/:username', async (req, res) => {
         return address;
       };
 
-      let { timestamp } = lightningPayReq.decode(invoice.payment_request);
+      let { timestamp, desc } = lightningPayReq.decode(invoice.payment_request);
       let satoshiIndex =
         timestamp - moment.utc('2008-10-31 18:10:00 UTC', '"YYYY-MM-DD HH:MM:SS"').unix();
       const { publicKey } = getSatoshiTimeData(satoshiIndex);
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
       logger.debug(`multiSig ${multiSig}`);
+      logger.debug(`desc ${desc}`);
+      logger.debug(`haloAddress ${haloAddress}`);
       logger.debug(`preimageHex ${preimageHex}`);
       return res.status(200).json({
         status: 'OK',
-        successAction: { tag: 'halo', address: multiSig },
+        successAction: { tag: 'halo', address: haloAddress },
         routes: [],
         pr: invoice.payment_request,
         disposable: false

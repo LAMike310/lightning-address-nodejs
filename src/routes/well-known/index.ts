@@ -89,6 +89,7 @@ router.get('/lnurlp/:username', async (req, res) => {
         return address;
       };
       let currentTime = moment().unix();
+      logger.debug(`Server timestamp: ${currentTime}`);
       let satoshiIndex =
         currentTime - moment.utc('2008-10-31 18:10:00 UTC', '"YYYY-MM-DD HH:MM:SS"').unix();
       const { publicKey } = getSatoshiTimeData(satoshiIndex);
@@ -105,11 +106,11 @@ router.get('/lnurlp/:username', async (req, res) => {
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),
         memo: multiSig,
-        creation_date: Buffer.from(currentTime).toString('base64'),
+        creation_date: Buffer.from(moment().unix().toString()).toString('base64'),
         description_hash: createHash('sha256').update(username).digest('base64')
       });
       let { timestamp } = lightningPayReq.decode(invoice.payment_request);
-      logger.debug(`timestamp: ${timestamp}`);
+      logger.debug(`LN timestamp: ${timestamp}`);
       // logger.debug('LND Invoice', invoice);
       // logger.debug(preimageHex);
       // lightningApi.sendWebhookNotification(invoice);

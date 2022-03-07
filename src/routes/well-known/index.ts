@@ -14,7 +14,7 @@ const bip32 = require('bip32');
 const lightningPayReq = require('bolt11');
 const moment = require('moment');
 const { getSatoshiTimeData } = require('./satoshiTime');
-
+const { createHash } = require('crypto');
 const DOMAIN = process.env.LNADDR_DOMAIN;
 
 const router = Router();
@@ -82,13 +82,18 @@ router.get('/lnurlp/:username', async (req, res) => {
     logger.debug('haloAddress', haloAddress);
     try {
       // logger.debug('Generating LND Invoice');
-      let descriptionHex = hash.sha256().update(username).digest('hex');
       logger.debug(`${username}, ${username.length}`);
-      logger.info(`HASHED USERNAME: ${descriptionHex}`);
+      logger.info(
+        `HASHED USERNAME: ${createHash('sha256').update(username).digest('hex')} ${createHash(
+          'sha256'
+        )
+          .update(username)
+          .digest('base64')}`
+      );
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),
-        description_hash: Buffer.from(descriptionHex, 'hex').toString('base64')
+        description_hash: createHash('sha256').update(username).digest('base64')
       });
       // logger.debug('LND Invoice', invoice);
       // logger.debug(preimageHex);

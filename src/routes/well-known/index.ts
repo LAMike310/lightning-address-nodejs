@@ -70,7 +70,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       return {
         haloAddress: address,
         haloKey: node.publicKey.toString('hex'),
-        haloScope: crypto.createHash('md5').update(haloAddress).digest('hex')
+        haloScope: crypto.createHash('md5').update(address).digest('hex')
       };
     }
 
@@ -107,7 +107,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
       logger.debug(`multiSig ${multiSig}`);
       logger.debug(`desc ${desc}`);
-      logger.debug(`haloAddress ${haloScope}`);
+      logger.debug(`haloScope ${haloScope}`);
       logger.debug(`preimageHex ${preimageHex}`);
       return res.status(200).json({
         status: 'OK',

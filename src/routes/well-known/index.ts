@@ -83,7 +83,6 @@ router.get('/lnurlp/:username', async (req, res) => {
       bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
     logger.debug(`haloAddress ${haloAddress}`);
-    logger.debug(`haloScope ${haloScope}`);
     try {
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
@@ -107,7 +106,6 @@ router.get('/lnurlp/:username', async (req, res) => {
       const { publicKey } = getSatoshiTimeData(satoshiIndex);
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
       logger.debug(`multiSig ${multiSig}`);
-      logger.debug(`desc ${desc}`);
       logger.debug(`haloScope ${haloScope}`);
       logger.debug(`preimageHex ${preimageHex}`);
       return res.status(200).json({

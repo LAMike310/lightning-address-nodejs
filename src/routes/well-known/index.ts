@@ -83,6 +83,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
     logger.debug(`haloAddress ${haloAddress}`);
+    logger.debug(`haloScope ${haloScope}`);
     try {
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,

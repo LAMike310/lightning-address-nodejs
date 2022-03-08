@@ -67,7 +67,11 @@ router.get('/lnurlp/:username', async (req, res) => {
     function getAddress(node: { publicKey: any }) {
       const config = { pubkey: node.publicKey };
       const { address } = bitcoin.payments.p2wpkh(config);
-      return { haloAddress: address, haloKey: node.publicKey.toString('hex') };
+      return {
+        haloAddress: address,
+        haloKey: node.publicKey.toString('hex'),
+        haloScope: crypto.createHash('md5').update(haloAddress).digest('hex')
+      };
     }
 
     let binarySeedArray = findLastBits(preimageHex).map((a: string) =>
@@ -75,26 +79,15 @@ router.get('/lnurlp/:username', async (req, res) => {
     );
     let getSeed = (preimage: string) =>
       splitBits(findLastBits(preimage)[binarySeedArray.indexOf(true)]);
-    let { haloAddress, haloKey } = getAddress(
+    let { haloAddress, haloKey, haloScope } = getAddress(
       bip32.fromSeed(bip39.mnemonicToSeedSync(getSeed(preimageHex))).derivePath(`m/84'/0'/0'/0/0`)
     );
-
     logger.debug(`haloAddress ${haloAddress}`);
     try {
-      logger.info(
-        `HASHED USERNAME: ${createHash('sha256').update(username).digest('hex')} ${createHash(
-          'sha256'
-        )
-          .update(username)
-          .digest('base64')}`
-      );
-
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),
-        memo: `{haloAddress: ${haloAddress}, contentHash: ${createHash('sha256')
-          .update(username)
-          .digest('hex')}}`
+        memo: `{"haloScope":"${haloScope}", "contentHash":"${username}"}`
         // description_hash: createHash('sha256').update(username).digest('base64')
       });
       // logger.debug('LND Invoice', invoice);
@@ -114,11 +107,11 @@ router.get('/lnurlp/:username', async (req, res) => {
       const multiSig = createMultiSig([publicKey, haloKey].map((hex) => Buffer.from(hex, 'hex')));
       logger.debug(`multiSig ${multiSig}`);
       logger.debug(`desc ${desc}`);
-      logger.debug(`haloAddress ${haloAddress}`);
+      logger.debug(`haloAddress ${haloScope}`);
       logger.debug(`preimageHex ${preimageHex}`);
       return res.status(200).json({
         status: 'OK',
-        successAction: { tag: 'halo', address: haloAddress },
+        successAction: { tag: 'halo', address: haloScope },
         routes: [],
         pr: invoice.payment_request,
         disposable: false

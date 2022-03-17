@@ -87,9 +87,7 @@ router.get('/lnurlp/:username', async (req, res) => {
       const invoice = await lightningApi.lightningAddInvoice({
         value_msat: msat as string,
         r_preimage: preimage.toString('base64'),
-        memo: `{"haloScope":"${haloScope}", "contentHash":"${createHash('sha256')
-          .update(username)
-          .digest('hex')}"}`
+        memo: `{"haloScope":"${haloScope}", "contentHash": ${username}`
         // description_hash: createHash('sha256').update(username).digest('base64')
       });
       // logger.debug('LND Invoice', invoice);
